@@ -1,14 +1,12 @@
 package controller
 
 import (
-	"time"
-
 	"ginchat/utils"
+	"time"
 
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
 
 type UserBasic struct {
 	gorm.Model
@@ -21,8 +19,10 @@ type UserBasic struct {
 	ClientIp      string
 	ClientPort    string
 	Salt          string
-	LoginTime     time.Time
-	HeartbeatTime time.Time
+	LoginTime     time.Time `gorm:"column:login_time" json:"login_time"`
+	HeartbeatTime time.Time `gorm:"column:heartbeat_time" json:"heartbeat_time"`
+	LoginOutTime  time.Time `gorm:"column:login_out_time" json:"login_out_time"`
+	IsLogout      bool
 	DeviceInfo    string
 }
 

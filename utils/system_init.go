@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -16,6 +17,16 @@ var (
 	DB    *gorm.DB
 	REDIS *redis.Client
 )
+
+func ConfigInit() {
+	viper.SetConfigName("app")
+	viper.AddConfigPath("config")
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("config  app inited 。。。。")
+}
 
 func MysqlInit() {
 	var err error
@@ -28,8 +39,9 @@ func MysqlInit() {
 		},
 	)
 
-	dsn := "root:123456@tcp(localhost:3306)/ginchat?charset=utf8&parseTime=True&loc=Local"
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	//dsn := "root:123456@tcp(localhost:3306)/ginchat?charset=utf8&parseTime=True&loc=Local"
+	// dsn := viper.GetString("mysql.dns")
+	DB, err = gorm.Open(mysql.Open(viper.GetString("mysql.dns")), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
