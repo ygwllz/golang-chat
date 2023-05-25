@@ -1,4 +1,17 @@
 info:
   contact: {}
-paths: {}
+paths:
+  /index:
+    get:
+      consumes:
+      - application/json
+      description: do ping
+      responses:
+        "200":
+          description: message"}
+          schema:
+            type: string
+      summary: ping example
+      tags:
+      - 首页
 swagger: "2.0"
