@@ -21,18 +21,25 @@ import (
 
 func Router() {
 	r := gin.Default()
-	//静态资源引入
-	r.Static("/static", "./static")
-	r.StaticFile("/favicon.ico", "asset/images/favicon.ico")
 
+	//静态资源引入
+	r.Static("/asset", "./asset")
+	r.StaticFile("/favicon.ico", "asset/images/favicon.ico")
 	r.LoadHTMLGlob("templates/**/*")
+	r.LoadHTMLFiles("test_gin_.html")
 	//swagger
 	docs.SwaggerInfo.BasePath = ""
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	// r.GET("/helloworld", Helloworld)
-	r.GET("/index", service.GetIndex) //回调函数
-	r.GET("/", service.GetIndex)
+	//首页
+	r.GET("/index", service.GetIndex) //首页
+	//r.GET("/", service.GetIndex)      //首页
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(200, "index.html", gin.H{
+			"message": "wowwwwwwwwww!",
+		})
+	})
+	r.GET("/toRegister", service.ToRegister)
 
 	r.Run(":8080")
 }

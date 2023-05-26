@@ -1,6 +1,10 @@
 package service
 
-import "github.com/gin-gonic/gin"
+import (
+	"html/template"
+
+	"github.com/gin-gonic/gin"
+)
 
 // @Summary ping example
 // @Description do ping
@@ -15,5 +19,9 @@ func GetIndex(c *gin.Context) {
 }
 
 func ToRegister(c *gin.Context) {
-	
+	res, err := template.ParseFiles("templates/user/register.html")
+	if err != nil {
+		panic(err)
+	}
+	res.Execute(c.Writer, "register")
 }
