@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 type UserBasic struct {
 	gorm.Model
 	Name          string
@@ -34,4 +33,17 @@ func GetUserList() []*UserBasic {
 	data := make([]*UserBasic, 10)
 	utils.DB.Find(&data)
 	return data
+}
+
+func FindUserByName(name string) UserBasic {
+	user := UserBasic{}
+	utils.DB.Where("name = ?", name).Find(&user)//
+	if user.Name == "" {
+		return UserBasic{}
+	}
+	return user
+}
+
+func CreateUser(user UserBasic) *gorm.DB {
+	return utils.DB.Create(&user)
 }

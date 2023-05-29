@@ -25,8 +25,12 @@ func Router() {
 	//静态资源引入
 	r.Static("/asset", "./asset")
 	r.StaticFile("/favicon.ico", "asset/images/favicon.ico")
-	r.LoadHTMLGlob("templates/**/*")
-	r.LoadHTMLFiles("test_gin_.html")
+	r.LoadHTMLGlob("./templates/**/*")
+
+	r.LoadHTMLFiles("index.html", "templates/chat/head.html")
+	// r.LoadHTMLFiles("aa.html")
+	// r.LoadHTMLFiles("test_gin_.html") //LoadHTMLFiles()疑似会覆盖前面的LoadHTMLFiles()？
+
 	//swagger
 	docs.SwaggerInfo.BasePath = ""
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -34,12 +38,11 @@ func Router() {
 	//首页
 	r.GET("/index", service.GetIndex) //首页
 	//r.GET("/", service.GetIndex)      //首页
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(200, "index.html", gin.H{
-			"message": "wowwwwwwwwww!",
-		})
+	r.GET("/", func(c *gin.Context) { //首页的两种渲染方式
+		c.HTML(200, "index.html", "index")
 	})
-	r.GET("/toRegister", service.ToRegister)
 
+	r.GET("/toRegister", service.ToRegister)
+	r.POST("/user/createUser", service.CreateUser)
 	r.Run(":8080")
 }
