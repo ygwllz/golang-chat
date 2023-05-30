@@ -44,6 +44,7 @@ func FindUserByName(name string) UserBasic {
 	return user
 }
 
+
 func CreateUser(user UserBasic) *gorm.DB {
 	return utils.DB.Create(&user)
 }

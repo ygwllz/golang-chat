@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	utils.ConfigInit() //这里要用viper的话，路径要修改程当前目录下config的相对路径
+	utils.InitConfig() //这里要用viper的话，路径要修改程当前目录下config的相对路径
 
 	dns := viper.GetString("mysql.dns")
 	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{})

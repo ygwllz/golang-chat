@@ -18,7 +18,7 @@ var (
 	REDIS *redis.Client
 )
 
-func ConfigInit() {
+func InitConfig() {
 	viper.SetConfigName("app")
 	viper.AddConfigPath("config")
 	err := viper.ReadInConfig()
@@ -28,7 +28,7 @@ func ConfigInit() {
 	fmt.Println("config  app inited 。。。。")
 }
 
-func MysqlInit() {
+func InitMysql() {
 	var err error
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
