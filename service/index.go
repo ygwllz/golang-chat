@@ -6,6 +6,7 @@ import (
 	"ginchat/utils"
 	"html/template"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -80,4 +81,69 @@ func CreateUser(c *gin.Context) {
 		"message": "用户注册成功！",
 		"data":    user,
 	})
+}
+
+func FindUserByNameAndPwd(c *gin.Context) {
+	name := c.PostForm("name")
+	password := c.PostForm("password")
+	fmt.Println(name, password)
+	//查库
+	user := controller.FindUserByName(name)
+	if user.Name == "" {
+		c.JSON(200, gin.H{
+			"code":    -1,
+			"message": "该用户不存在",
+			"data":    "该用户不存在",
+		})
+		return
+	}
+
+	//密码校验
+	ok := utils.ValidPassword(password, user.Salt, user.PassWord)
+	if !ok {
+		c.JSON(200, gin.H{
+			"code":    -1,
+			"message": "密码错误",
+			"data":    "密码错误",
+		})
+		return
+	}
+	pwd := utils.MakePassword(password, user.Salt)
+	data := controller.FindUserByNameAndPwd(name, pwd)
+	c.JSON(200, gin.H{
+		"code":    0,
+		"message": "登录成功",
+		"data":    data,
+	})
+
+}
+
+func ToChat(c *gin.Context) {
+	res, err := template.ParseFiles("templates/chat/index.html",
+		"templates/chat/head.html",
+		"templates/chat/foot.html",
+		"templates/chat/tabmenu.html",
+		"templates/chat/concat.html",
+		"templates/chat/group.html",
+		"templates/chat/profile.html",
+		"templates/chat/createcom.html",
+		"templates/chat/userinfo.html",
+		"templates/chat/main.html")
+	if err != nil {
+		panic(err)
+	}
+	userid, err := strconv.Atoi(c.Query("userId"))
+	if err != nil {
+		panic(err)
+	}
+	token := c.Query("token")
+	user := controller.UserBasic{}
+	user.ID = uint(userid)
+	user.Identity = token
+
+	res.Execute(c.Writer, user)
+}
+
+func Chat(c *gin.Context) {
+	controller.Chat(c.Writer, c.Request)
 }

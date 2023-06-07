@@ -23,7 +23,7 @@ func MakePassword(plainpwd, salt string) string {
 	return Md5Encode(plainpwd + salt)
 }
 
-//解密
+//校验
 func ValidPassword(plainpwd, salt string, password string) bool {
 	md := Md5Encode(plainpwd + salt)
 	//fmt.Println(md + "				" + password)

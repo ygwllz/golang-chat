@@ -41,8 +41,11 @@ func Router() {
 	r.GET("/", func(c *gin.Context) { //首页的两种渲染方式
 		c.HTML(200, "index.html", "index")
 	})
-
 	r.GET("/toRegister", service.ToRegister)
 	r.POST("/user/createUser", service.CreateUser)
+	r.GET("/toChat", service.ToChat)
+	//user
+	r.POST("/user/findUserByNameAndPwd", service.FindUserByNameAndPwd)
+
 	r.Run(":8080")
 }

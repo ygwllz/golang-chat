@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"ginchat/utils"
 	"time"
 
@@ -37,14 +38,25 @@ func GetUserList() []*UserBasic {
 
 func FindUserByName(name string) UserBasic {
 	user := UserBasic{}
-	utils.DB.Where("name = ?", name).Find(&user)//
+	utils.DB.Where("name = ?", name).Find(&user) //
 	if user.Name == "" {
 		return UserBasic{}
 	}
 	return user
 }
 
-
 func CreateUser(user UserBasic) *gorm.DB {
 	return utils.DB.Create(&user)
 }
+
+func FindUserByNameAndPwd(name, password string) UserBasic {
+	user := UserBasic{}
+	utils.DB.Where("name = ? and pass_word = ?", name, password).First(&user)
+
+	str := fmt.Sprintf("%d", time.Now().Unix())
+	temp := utils.MD5Encode(str)
+	utils.DB.Model(&user).Where("id = ?", user.ID).Update("identity", temp)
+	return user
+}
+
+
