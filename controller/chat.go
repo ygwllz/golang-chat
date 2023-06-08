@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"ginchat/utils"
+	"net"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
 	"gopkg.in/fatih/set.v0"
@@ -30,6 +31,15 @@ type Node struct {
 func (node *Node) Heartbeat(currentTime uint64) {
 	node.HeartbeatTime = currentTime
 	return
+}
+
+func (node *Node) IsHeartBeatTimeout(currenttime uint64) bool {
+	if node.HeartbeatTime+viper.GetUint64("timeout.HeartbeatMaxTime") < currenttime {
+		fmt.Println("心跳超时", node)
+		node.Conn.Close()
+		return true
+	}
+	return false
 }
 
 type Message struct {
@@ -130,8 +140,6 @@ func recvProc(node *Node) {
 	}
 }
 
-var udpsendChan chan []byte = make(chan []byte, 1024)
-
 func dispatch(data []byte) {
 	message := &Message{}
 	json.Unmarshal(data, message)
@@ -185,3 +193,88 @@ func sendMsg(TargetId int64, msg []byte) {
 	}
 
 }
+
+func sendGroupMsg(targetId int64, msg []byte) {
+	fmt.Println("开始群发消息")
+	userIds := SearchUserByGroupId(uint(targetId))
+	for i := 0; i < len(userIds); i++ {
+		//排除给自己的
+		if targetId != int64(userIds[i]) {
+			sendMsg(int64(userIds[i]), msg)
+		}
+	}
+}
+
+var udpsendChan chan []byte = make(chan []byte, 1024)
+
+func broadMsg(data []byte) {
+	udpsendChan <- data
+}
+func init() {
+	go udpSendProc()
+	go udpRecvProc()
+	fmt.Println("init goroutine ")
+}
+func udpSendProc() {
+	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
+		IP:   net.IPv4(192, 168, 0, 255),
+		Port: viper.GetInt("port.udp"),
+	})
+	defer conn.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	for {
+		select {
+		case data := <-udpsendChan:
+			fmt.Println("udpSendProc  data :", string(data))
+			_, err := conn.Write(data)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+	}
+}
+
+func udpRecvProc() {
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{
+		IP:   net.IPv4zero,
+		Port: viper.GetInt("port.udp"),
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer conn.Close()
+	for {
+		buf := []byte{}
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("udpRecvProc  data :", string(buf[0:n]))
+		dispatch(buf[0:n])
+	}
+}
+
+func CleanTimeoutConnection(param interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("cleanConnection err", r)
+		}
+	}()
+
+	currentTime := uint64(time.Now().Unix())
+	for i := range clientMap {
+		node := clientMap[i]
+		if node.IsHeartBeatTimeout(currentTime) {
+			fmt.Println("心跳超时..... 关闭连接：", node)
+			node.Conn.Close()
+		}
+	}
+	fmt.Println("clean completed")
+
+}
+
+
