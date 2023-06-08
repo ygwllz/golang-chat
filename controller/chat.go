@@ -26,6 +26,12 @@ type Node struct {
 	DataQueue     chan []byte     //消息
 	GroupSets     set.Interface   //好友 / 群
 }
+
+func (node *Node) Heartbeat(currentTime uint64) {
+	node.HeartbeatTime = currentTime
+	return
+}
+
 type Message struct {
 	gorm.Model
 	UserId     int64  //发送者
@@ -147,7 +153,7 @@ func sendMsg(TargetId int64, msg []byte) {
 	TargetIdstr := strconv.Itoa(int(TargetId))
 	UserIdstr := strconv.Itoa(int(jsonMsg.UserId))
 	jsonMsg.CreateTime = uint64(time.Now().Unix())
-	r, err := utils.Red.Get(ctx, "online_"+UserIdstr).Result()
+	r, err := utils.REDIS.Get(ctx, "online_"+UserIdstr).Result()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -163,12 +169,12 @@ func sendMsg(TargetId int64, msg []byte) {
 	} else {
 		key = "msg_" + TargetIdstr + "_" + UserIdstr
 	}
-	res, err := utils.Red.ZRevRange(ctx, key, 0, -1).Result()
+	res, err := utils.REDIS.ZRevRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		fmt.Println(err)
 	}
 	score := float64(cap(res)) + 1
-	ress, err := utils.Red.ZAdd(ctx, key, &redis.Z{score, msg}).Result()
+	ress, err := utils.REDIS.ZAdd(ctx, key, &redis.Z{score, msg}).Result()
 	if err != nil {
 		fmt.Println(err)
 	}

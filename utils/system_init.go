@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -49,4 +50,36 @@ func InitMysql() {
 	}
 
 	fmt.Println("Mysql init")
+}
+
+func InitRedis() {
+	REDIS = redis.NewClient(&redis.Options{
+		Addr:         viper.GetString("redis.addr"),
+		Password:     viper.GetString("redis.password"),
+		DB:           viper.GetInt("redis.DB"),
+		PoolSize:     viper.GetInt("redis.poolSize"),
+		MinIdleConns: viper.GetInt("redis.minIdleConn"),
+	})
+
+}
+
+const publishKey = "websocket"
+
+func Publish(ctx context.Context, channel string, msg string) error {
+	err := REDIS.Publish(ctx, channel, msg).Err()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return err
+}
+
+func Subscribe(ctx context.Context, channel string) (string, error) {
+	sub := REDIS.Subscribe(ctx, channel)
+	msg, err := sub.ReceiveMessage(ctx)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	// fmt.Println("Subscribe 。。。。", msg.Payload)
+	return msg.Payload, err
 }
