@@ -218,7 +218,7 @@ func init() {
 func udpSendProc() {
 	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
 		IP:   net.IPv4(192, 168, 0, 255),
-		Port: viper.GetInt("port.udp"),
+		Port: viper.GetInt("udp"),
 	})
 	defer conn.Close()
 	if err != nil {
